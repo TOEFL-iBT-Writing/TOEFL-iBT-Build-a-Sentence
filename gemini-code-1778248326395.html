@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEFL iBT Writing Practice: Build a Sentence</title>
+    <style>
+        :root { --primary: #4a90e2; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; --text: #2c3e50; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: white; max-width: 800px; width: 100%; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .stats { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 20px; color: #7f8c8d; }
+        .context-box { background: #f1f7ff; padding: 15px; border-left: 5px solid var(--primary); margin-bottom: 25px; }
+        .sentence-builder { font-size: 1.2rem; line-height: 2; margin-bottom: 30px; min-height: 100px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #fff; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .drop-area { display: inline-flex; flex-wrap: wrap; gap: 8px; min-width: 100px; border-bottom: 2px solid #bdc3c7; padding: 2px 10px; }
+        .word-bank { display: flex; flex-wrap: wrap; gap: 10px; padding: 20px; background: #fdfdfd; border: 1px dashed #ccc; border-radius: 8px; margin-bottom: 20px; min-height: 80px; }
+        .chip { background: white; border: 2px solid #dfe6e9; padding: 8px 16px; border-radius: 25px; cursor: pointer; transition: all 0.2s; user-select: none; font-weight: 500; }
+        .chip:hover { border-color: var(--primary); }
+        .chip.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .controls { display: flex; justify-content: space-between; align-items: center; }
+        button { padding: 12px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-check { background: var(--success); color: white; }
+        .btn-next { background: var(--primary); color: white; display: none; }
+        #feedback { font-weight: bold; }
+        .correct-text { color: var(--success); }
+        .wrong-text { color: var(--error); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>TOEFL Build a Sentence Practice</h1>
+    <div class="stats">
+        <span id="progress">Sentence 1 of 50</span>
+        <span id="score">Score: 0</span>
+    </div>
+
+    <div class="context-box">
+        <strong>Context:</strong> <span id="context-text"></span>
+    </div>
+
+    <div class="sentence-builder">
+        <span id="start-text"></span>
+        <div class="drop-area" id="answer-zone"></div>
+        <span id="end-text"></span>
+    </div>
+
+    <div class="word-bank" id="word-bank"></div>
+
+    <div class="controls">
+        <div id="feedback"></div>
+        <button class="btn-check" id="check-btn">Check Answer</button>
+        <button class="btn-next" id="next-btn">Next Sentence</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        // --- 15 NO-CLUE SENTENCES (No clues, No periods) ---
+        { context: "How long have you lived here?", start: "", end: "", words: ["been", "have", "I", "in this", "living", "city for", "five years"], answer: ["I", "have", "been", "living", "in this", "city for", "five years"] },
+        { context: "What happened to the cat?", start: "", end: "", words: ["found", "was", "the cat", "finally", "behind the", "old garage"], answer: ["the cat", "was", "finally", "found", "behind the", "old garage"] },
+        { context: "Are you coming to the meeting?", start: "", end: "", words: ["arrive", "as soon as", "I will", "the train", "gets in"], answer: ["I will", "arrive", "as soon as", "the train", "gets in"] },
+        { context: "Why is she so happy?", start: "", end: "", words: ["passed", "she", "her exam", "with", "excellent", "marks"], answer: ["she", "passed", "her exam", "with", "excellent", "marks"] },
+        { context: "What is your plan for tonight?", start: "", end: "", words: ["going", "to watch", "I am", "a movie", "at the", "cinema"], answer: ["I am", "going", "to watch", "a movie", "at the", "cinema"] },
+        { context: "Did you finish the homework?", start: "", end: "", words: ["harder", "it", "than", "was", "I", "expected"], answer: ["it", "was", "harder", "than", "I", "expected"] },
+        { context: "Where is my umbrella?", start: "", end: "", words: ["left", "you", "it", "near", "the", "front door"], answer: ["you", "left", "it", "near", "the", "front door"] },
+        { context: "Why are they late?", start: "", end: "", words: ["missed", "they", "the", "bus", "this", "morning"], answer: ["they", "missed", "the", "bus", "this", "morning"] },
+        { context: "What did you buy?", start: "", end: "", words: ["bought", "I", "a new", "pair of", "running", "shoes"], answer: ["I", "bought", "a new", "pair of", "running", "shoes"] },
+        { context: "Is it cold outside?", start: "", end: "", words: ["need", "you", "to wear", "a", "heavy", "coat"], answer: ["you", "need", "to wear", "a", "heavy", "coat"] },
+        { context: "How do I get there?", start: "", end: "", words: ["take", "the", "you should", "subway", "to the", "center"], answer: ["you should", "take", "the", "subway", "to the", "center"] },
+        { context: "Who was that on the phone?", start: "", end: "", words: ["calling", "that", "my sister", "was", "from", "London"], answer: ["that", "was", "my sister", "calling", "from", "London"] },
+        { context: "Are we almost there?", start: "", end: "", words: ["another", "it", "ten minutes", "will take", "at least"], answer: ["it", "will take", "at least", "another", "ten minutes"] },
+        { context: "What is your favorite food?", start: "", end: "", words: ["nothing", "is", "there", "better than", "homemade", "pizza"], answer: ["there", "is", "nothing", "better than", "homemade", "pizza"] },
+        { context: "Can you swim?", start: "", end: "", words: ["learned", "I", "when", "was", "I", "five", "years old"], answer: ["I", "learned", "when", "I", "was", "five", "years old"] },
+
+        // --- 15 DISTRACTOR SENTENCES (One word start, One word end, One distractor) ---
+        { context: "What did the doctor suggest?", start: "He", end: "rest.", words: ["recommended", "that", "I", "should", "get", "some", "suggesting"], answer: ["recommended", "that", "I", "should", "get", "some"] },
+        { context: "Is the project done?", start: "It", end: "Friday.", words: ["will", "probably", "be", "finished", "by", "is"], answer: ["will", "probably", "be", "finished", "by"] },
+        { context: "Where is the stolen money?", start: "It", end: "police.", words: ["was", "eventually", "returned", "safely", "to", "the", "returning"], answer: ["was", "eventually", "returned", "safely", "to", "the"] },
+        { context: "Who built this house?", start: "It", end: "grandfather.", words: ["was", "built", "by", "my", "is"], answer: ["was", "built", "by", "my"] },
+        { context: "Where is the library?", start: "It", end: "park.", words: ["is", "located", "next", "to", "the", "at"], answer: ["is", "located", "next", "to", "the"] },
+        { context: "Why did you call?", start: "I", end: "news.", words: ["called", "to", "tell", "you", "the", "latest", "saying"], answer: ["called", "to", "tell", "you", "the", "latest"] },
+        { context: "Have you seen him?", start: "I", end: "days.", words: ["haven't", "seen", "him", "for", "three", "since"], answer: ["haven't", "seen", "him", "for", "three"] },
+        { context: "Is she coming?", start: "She", end: "can.", words: ["said", "that", "she", "will", "come", "if", "she", "going"], answer: ["said", "that", "she", "will", "come", "if", "she"] },
+        { context: "Why is he tired?", start: "He", end: "day.", words: ["has", "been", "working", "hard", "all", "hardly"], answer: ["has", "been", "working", "hard", "all"] },
+        { context: "What's that noise?", start: "It", end: "plane.", words: ["sounds", "like", "it", "is", "a", "be"], answer: ["sounds", "like", "it", "is", "a"] },
+        { context: "Can I borrow this?", start: "Yes,", end: "it.", words: ["as", "long", "as", "you", "return", "if"], answer: ["as", "long", "as", "you", "return"] },
+        { context: "What happened?", start: "The", end: "stolen.", words: ["car", "was", "reported", "as", "being", "been"], answer: ["car", "was", "reported", "as", "being"] },
+        { context: "Where are they?", start: "They", end: "office.", words: ["must", "have", "already", "left", "the", "went"], answer: ["must", "have", "already", "left", "the"] },
+        { context: "Who is that?", start: "That", end: "bank.", words: ["is", "the", "man", "who", "works", "at", "the", "whom"], answer: ["is", "the", "man", "who", "works", "at", "the"] },
+        { context: "Why did they stop?", start: "They", end: "gas.", words: ["ran", "completely", "out", "of", "from"], answer: ["ran", "completely", "out", "of"] },
+
+        // --- 20 STANDARD SENTENCES (One word start, One word end) ---
+        { context: "What are your plans for summer?", start: "I", end: "Spain.", words: ["am", "looking", "forward", "to", "traveling", "to"], answer: ["am", "looking", "forward", "to", "traveling", "to"] },
+        { context: "Why is he studying French?", start: "He", end: "Paris.", words: ["hopes", "to be", "able to", "work", "in"], answer: ["hopes", "to be", "able to", "work", "in"] },
+        { context: "What did the manager say?", start: "She", end: "time.", words: ["told us", "that", "the meeting", "would", "start", "on"], answer: ["told us", "that", "the meeting", "would", "start", "on"] },
+        { context: "Is the software better?", start: "Yes,", end: "version.", words: ["it", "is", "much", "faster", "than", "the", "previous"], answer: ["it", "is", "much", "faster", "than", "the", "previous"] },
+        { context: "What happens if it rains?", start: "The", end: "week.", words: ["event", "will", "have to", "be", "postponed", "until", "next"], answer: ["event", "will", "have to", "be", "postponed", "until", "next"] },
+        { context: "How was the exhibition?", start: "The", end: "breathtaking.", words: ["artwork", "that", "was", "on display", "was", "truly"], answer: ["artwork", "that", "was", "on display", "was", "truly"] },
+        { context: "Are you satisfied?", start: "Yes,", end: "expected.", words: ["they", "are", "far", "better", "than", "we", "had"], answer: ["they", "are", "far", "better", "than", "we", "had"] },
+        { context: "Why didn't you buy it?", start: "It", end: "it.", words: ["was", "so expensive", "that", "I", "could not", "afford"], answer: ["was", "so expensive", "that", "I", "could not", "afford"] },
+        { context: "What did you see?", start: "I", end: "mountains.", words: ["saw", "a large", "eagle", "flying", "over", "the"], answer: ["saw", "a large", "eagle", "flying", "over", "the"] },
+        { context: "Who is that girl?", start: "She", end: "class.", words: ["is", "the", "new", "student", "in", "my"], answer: ["is", "the", "new", "student", "in", "my"] },
+        { context: "When do we eat?", start: "Dinner", end: "minutes.", words: ["will", "be", "served", "in", "about", "ten"], answer: ["will", "be", "served", "in", "about", "ten"] },
+        { context: "How is your new job?", start: "It", end: "thought.", words: ["is", "much", "busier", "than", "what", "I"], answer: ["is", "much", "busier", "than", "what", "I"] },
+        { context: "Where is the cat?", start: "It", end: "sofa.", words: ["is", "hiding", "under", "the", "back", "of", "the"], answer: ["is", "hiding", "under", "the", "back", "of", "the"] },
+        { context: "Do you like tea?", start: "I", end: "coffee.", words: ["prefer", "drinking", "tea", "instead", "of"], answer: ["prefer", "drinking", "tea", "instead", "of"] },
+        { context: "Why are you here?", start: "I", end: "friend.", words: ["am", "waiting", "here", "to", "meet", "my"], answer: ["am", "waiting", "here", "to", "meet", "my"] },
+        { context: "What did he say?", start: "He", end: "tomorrow.", words: ["told", "me", "he", "would", "call"], answer: ["told", "me", "he", "would", "call"] },
+        { context: "Is she a doctor?", start: "No,", end: "nurse.", words: ["she", "is", "actually", "working", "as", "a"], answer: ["she", "is", "actually", "working", "as", "a"] },
+        { context: "Are they here yet?", start: "They", end: "minute.", words: ["should", "be", "arriving", "here", "at", "any"], answer: ["should", "be", "arriving", "here", "at", "any"] },
+        { context: "Who won the game?", start: "The", end: "end.", words: ["home team", "won", "the game", "at", "the", "very"], answer: ["home team", "won", "the game", "at", "the", "very"] },
+        { context: "Where is the milk?", start: "I", end: "fridge.", words: ["put", "it", "back", "inside", "of", "the"], answer: ["put", "it", "back", "inside", "of", "the"] }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let userSelection = [];
+    let availableWords = [];
+
+    const elements = {
+        progress: document.getElementById('progress'),
+        score: document.getElementById('score'),
+        context: document.getElementById('context-text'),
+        start: document.getElementById('start-text'),
+        end: document.getElementById('end-text'),
+        answerZone: document.getElementById('answer-zone'),
+        wordBank: document.getElementById('word-bank'),
+        feedback: document.getElementById('feedback'),
+        checkBtn: document.getElementById('check-btn'),
+        nextBtn: document.getElementById('next-btn')
+    };
+
+    function initQuestion() {
+        const q = quizData[currentIdx];
+        userSelection = [];
+        availableWords = [...q.words].sort(() => Math.random() - 0.5);
+        
+        elements.progress.textContent = `Sentence ${currentIdx + 1} of ${quizData.length}`;
+        elements.context.textContent = q.context;
+        elements.start.textContent = q.start;
+        // Adding space if there's a start word, and adding period if there's an end word
+        elements.end.textContent = q.end ? (q.end.endsWith('.') || q.end.endsWith('?') ? q.end : q.end + '.') : "";
+        elements.feedback.textContent = "";
+        elements.nextBtn.style.display = "none";
+        elements.checkBtn.style.display = "block";
+        
+        render();
+    }
+
+    function render() {
+        elements.wordBank.innerHTML = "";
+        availableWords.forEach((word, index) => {
+            const btn = document.createElement('div');
+            btn.className = "chip";
+            btn.textContent = word;
+            btn.onclick = () => selectWord(index);
+            elements.wordBank.appendChild(btn);
+        });
+
+        elements.answerZone.innerHTML = "";
+        userSelection.forEach((word, index) => {
+            const btn = document.createElement('div');
+            btn.className = "chip selected";
+            btn.textContent = word;
+            btn.onclick = () => deselectWord(index);
+            elements.answerZone.appendChild(btn);
+        });
+    }
+
+    function selectWord(index) {
+        userSelection.push(availableWords[index]);
+        availableWords.splice(index, 1);
+        render();
+    }
+
+    function deselectWord(index) {
+        availableWords.push(userSelection[index]);
+        userSelection.splice(index, 1);
+        render();
+    }
+
+    elements.checkBtn.onclick = () => {
+        const q = quizData[currentIdx];
+        const isCorrect = JSON.stringify(userSelection) === JSON.stringify(q.answer);
+        
+        if (isCorrect) {
+            score++;
+            elements.score.textContent = `Score: ${score}`;
+            elements.feedback.innerHTML = `<span class="correct-text">✓ correct!</span>`;
+            elements.checkBtn.style.display = "none";
+            elements.nextBtn.style.display = "block";
+        } else {
+            elements.feedback.innerHTML = `<span class="wrong-text">✗ incorrect. check word order and remember one word might not belong.</span>`;
+        }
+    };
+
+    elements.nextBtn.onclick = () => {
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            initQuestion();
+        } else {
+            alert(`Practice complete! Final Score: ${score}/${quizData.length}`);
+            currentIdx = 0; score = 0; initQuestion();
+        }
+    };
+
+    initQuestion();
+</script>
+</body>
+</html>
